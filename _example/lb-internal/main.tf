@@ -1,0 +1,91 @@
+provider "google" {
+  project = "testing-gcp-ops"
+  region  = "asia-northeast1"
+  zone    = "asia-northeast1-a"
+}
+
+locals {
+  resource_name = "lb-minimal"
+  health_check = {
+    type                = "http"
+    check_interval_sec  = 1
+    healthy_threshold   = 4
+    timeout_sec         = 1
+    unhealthy_threshold = 5
+    response            = ""
+    proxy_header        = "NONE"
+    port                = 8081
+    port_name           = "health-check-port"
+    request             = ""
+    request_path        = "/"
+    host                = "1.2.3.4"
+    enable_log          = false
+  }
+}
+
+#####==============================================================================
+##### vpc module call.
+#####==============================================================================
+module "vpc" {
+  source                                    = "git::https://github.com/SyncArcs/terraform-google-vpc.git?ref=v1.0.1"
+  name                                      = "app"
+  environment                               = "test"
+  routing_mode                              = "REGIONAL"
+  network_firewall_policy_enforcement_order = "AFTER_CLASSIC_FIREWALL"
+}
+
+#####==============================================================================
+##### subnet module call.
+#####==============================================================================
+module "subnet" {
+  source        = "git::https://github.com/SyncArcs/terraform-google-subnet.git?ref=v1.0.0"
+  name          = "app"
+  environment   = "test"
+  subnet_names  = ["subnet-a"]
+  gcp_region    = "asia-northeast1"
+  network       = module.vpc.vpc_id
+  ip_cidr_range = ["10.10.1.0/24"]
+}
+
+#####==============================================================================
+##### firewall module call.
+#####==============================================================================
+module "firewall" {
+  source      = "git::https://github.com/SyncArcs/terraform-google-firewall.git?ref=v1.0.0"
+  name        = "app"
+  environment = "test"
+  network     = module.vpc.vpc_id
+
+  ingress_rules = [
+    {
+      name          = "allow-tcp-http-ingress"
+      description   = "Allow TCP, HTTP ingress traffic"
+      direction     = "INGRESS"
+      priority      = 1000
+      source_ranges = ["0.0.0.0/0"]
+      allow = [
+        {
+          protocol = "tcp"
+          ports    = ["22", "80"]
+        }
+      ]
+    }
+  ]
+}
+
+#####==============================================================================
+##### lb_internal module call.
+#####==============================================================================
+module "lb_internal" {
+  source       = "../../"
+  name         = local.resource_name
+  environment  = "test"
+  region       = "asia-northeast1"
+  network      = module.vpc.vpc_id
+  subnetwork   = module.subnet.subnet_id
+  ports        = ["8080"]
+  source_tags  = ["source-tag-foo"]
+  target_tags  = ["target-tag-bar"]
+  backends     = []
+  health_check = local.health_check
+}
