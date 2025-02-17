@@ -14,16 +14,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      # Step 2: Set up the SSH private key from GitHub Secrets
-      - name: Setup SSH key
+      # Step 2: Set up SSH agent and add private key
+      - name: Set up SSH key with agent
         run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
           chmod 600 private_key.pem
+          eval $(ssh-agent -s)
+          ssh-add private_key.pem
 
       # Step 3: Install NGINX on the AWS instance
       - name: Install NGINX on AWS server
         run: |
-          ssh -v -o StrictHostKeyChecking=no -i private_key.pem ubuntu@54.234.227.52 << 'EOF'
+          ssh -v -o StrictHostKeyChecking=no ubuntu@54.234.227.52 << 'EOF'
             sudo apt-get update
             sudo apt-get install -y nginx
             sudo systemctl start nginx
