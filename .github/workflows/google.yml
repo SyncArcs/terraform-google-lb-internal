@@ -3,7 +3,7 @@ name: Install Nginx on Remote Server
 on:
   push:
     branches:
-      - main  # Trigger this action on push to the main branch
+      - main
 
 jobs:
   install_nginx:
@@ -18,14 +18,14 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/id_rsa
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Add SSH known hosts
         run: |
           ssh-keyscan -H 54.234.227.52 >> ~/.ssh/known_hosts
-
-  
 
       - name: Install Nginx on remote server
         run: |
