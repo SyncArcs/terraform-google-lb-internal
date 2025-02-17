@@ -21,9 +21,13 @@ jobs:
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Add SSH known hosts (if needed)
+      - name: Add SSH known hosts
         run: |
           ssh-keyscan -H 54.234.227.52 >> ~/.ssh/known_hosts
+
+      - name: Debug SSH connection
+        run: |
+          ssh -v -o StrictHostKeyChecking=no ubuntu@54.234.227.52 "echo 'SSH is working!'"
 
       - name: Install Nginx on remote server
         run: |
