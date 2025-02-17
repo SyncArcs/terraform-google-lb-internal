@@ -1,37 +1,25 @@
-name: Install NGINX on AWS Server
+name: Deploy Nginx
 
 on:
   push:
     branches:
-      - main  # Adjust to your desired branch.
+      - main
 
 jobs:
-  install_nginx:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout repository (optional if you need access to the code)
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      # Step 2: Set up SSH agent and add private key
-      - name: Set up SSH key with agent
+      - name: Setup SSH Key
         run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > github.pem
-          chmod 600 github.pem
-          eval $(ssh-agent -s)
-          ssh-add github.pem
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H 54.84.157.124 >> ~/.ssh/known_hosts
 
-      # Step 3: Install NGINX on the AWS instance
-      - name: Install NGINX on AWS server
+      - name: Install Nginx on Server
         run: |
-          ssh -v -o StrictHostKeyChecking=no ubuntu@54.234.227.52 << 'EOF'
-            sudo apt-get update
-            sudo apt-get install -y nginx
-            sudo systemctl start nginx
-            sudo systemctl enable nginx
-          EOF
-
-      # Step 4: Clean up private key file after usage
-      - name: Clean up
-        run: rm -f github.pem
+          ssh ${{ secrets.SSH_USER }}@54.84.157.124 "sudo apt update && sudo apt install -y nginx && sudo systemctl enable --now nginx"
