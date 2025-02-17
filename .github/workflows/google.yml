@@ -3,7 +3,7 @@ name: Install Nginx on multiple servers
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   deploy:
@@ -17,17 +17,13 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v2
 
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.5.3
         with:
-          ssh-private-key: |
-            ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Add SSH Known Hosts
-        run: ssh-keyscan -H ${{ matrix.server_ip }} >> ~/.ssh/known_hosts
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Install Nginx on Server
         run: |
-          ssh ubuntu@${{ matrix.server_ip }} 'sudo apt-get update && sudo apt-get install -y nginx'
+          ssh -i ~/.ssh/id_rsa  -o StrictHostKeyChecking=no ashish@${{ matrix.server_ip }} 'sudo apt-get update && sudo apt-get install -y nginx'
