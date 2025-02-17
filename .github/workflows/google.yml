@@ -1,35 +1,29 @@
-name: Install Nginx on multiple servers
+name: Install Nginx on Server
 
 on:
   push:
     branches:
-      - main
+      - main  # Trigger this action on push to the main branch
 
 jobs:
-  deploy:
+  install_nginx:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        server_ip:
-          - 54.234.227.52
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.5.3
-        with:
-          ssh-private-key: |
-            ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Update package lists
+        run: sudo apt-get update
 
-      - name: Add SSH Known Hosts
-        run: ssh-keyscan -H ${{ matrix.server_ip }} >> ~/.ssh/known_hosts
+      - name: Install Nginx
+        run: sudo apt-get install -y nginx
 
-      - name: Debug SSH Connection
-        run: ssh -v ubuntu@${{ matrix.server_ip }} "echo SSH Connection Successful"
+      - name: Start Nginx service
+        run: sudo systemctl start nginx
 
-      - name: Install Nginx on Server
-        run: |
-          ssh ubuntu@${{ matrix.server_ip }} 'sudo apt-get update && sudo apt-get install -y nginx'
+      - name: Enable Nginx to start on boot
+        run: sudo systemctl enable nginx
+
+      - name: Check Nginx status
+        run: sudo systemctl status nginx
