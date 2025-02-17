@@ -18,10 +18,9 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          eval "$(ssh-agent -s)"
-          ssh-add ~/.ssh/id_rsa
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          
+          # Debugging step to confirm the key content (optional and should be done cautiously)
+          echo "SSH Key loaded successfully."
 
       - name: Add SSH known hosts
         run: |
@@ -29,4 +28,6 @@ jobs:
 
       - name: Install Nginx on remote server
         run: |
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/id_rsa
           ssh -o StrictHostKeyChecking=no ubuntu@54.234.227.52 "sudo apt-get update && sudo apt-get install -y nginx && sudo systemctl start nginx && sudo systemctl enable nginx"
