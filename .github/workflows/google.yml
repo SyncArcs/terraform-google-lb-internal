@@ -1,4 +1,4 @@
-name: Install Nginx on Server
+name: Install Nginx on Remote Server
 
 on:
   push:
@@ -13,17 +13,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Update package lists
-        run: sudo apt-get update
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Install Nginx
-        run: sudo apt-get install -y nginx
+      - name: Add SSH known hosts (if needed)
+        run: |
+          ssh-keyscan -H 54.234.227.52 >> ~/.ssh/known_hosts
 
-      - name: Start Nginx service
-        run: sudo systemctl start nginx
-
-      - name: Enable Nginx to start on boot
-        run: sudo systemctl enable nginx
-
-      - name: Check Nginx status
-        run: sudo systemctl status nginx
+      - name: Install Nginx on remote server
+        run: |
+          ssh -o StrictHostKeyChecking=no ubuntu@54.234.227.52 "sudo apt-get update && sudo apt-get install -y nginx && sudo systemctl start nginx && sudo systemctl enable nginx"
