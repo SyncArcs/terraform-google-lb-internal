@@ -3,18 +3,18 @@ name: Install NGINX on AWS Server
 on:
   push:
     branches:
-      - main  # You can adjust this to any branch you want to trigger the action on.
+      - main  # Adjust to your desired branch.
 
 jobs:
   install_nginx:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout your code (optional depending on your use case)
+      # Step 1: Checkout repository (optional if you need access to the code)
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      # Step 2: Set up the PEM file as a secret
+      # Step 2: Set up the SSH private key from GitHub Secrets
       - name: Setup SSH key
         run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
@@ -23,13 +23,13 @@ jobs:
       # Step 3: Install NGINX on the AWS instance
       - name: Install NGINX on AWS server
         run: |
-          ssh -o StrictHostKeyChecking=no -i private_key.pem ubuntu@54.234.227.52 << 'EOF'
+          ssh -v -o StrictHostKeyChecking=no -i private_key.pem ubuntu@54.234.227.52 << 'EOF'
             sudo apt-get update
             sudo apt-get install -y nginx
             sudo systemctl start nginx
             sudo systemctl enable nginx
           EOF
 
-      # Clean up the private key file
+      # Step 4: Clean up private key file after usage
       - name: Clean up
         run: rm -f private_key.pem
