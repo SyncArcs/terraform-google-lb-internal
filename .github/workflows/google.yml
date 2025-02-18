@@ -1,28 +1,30 @@
-name: Deploy Nginx Server
+name: Deploy NGINX on Server
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+on: [push, workflow_dispatch]
 
 jobs:
-  nginx-server:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install and Start Nginx
+      - name: Setup SSH Key
         run: |
-          sudo apt update
-          sudo apt install -y nginx
-          sudo systemctl start nginx
-          sudo systemctl enable nginx
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H 54.81.113.21 >> ~/.ssh/known_hosts
 
-      - name: Verify Nginx is Running
+      - name: Install & Start NGINX on Server
         run: |
-          curl -I http://127.0.0.1 | grep "200 OK"
+          ssh ubuntu@54.81.113.21 << 'EOF'
+            sudo apt update
+            sudo apt install -y nginx
+            sudo systemctl start nginx
+            sudo systemctl enable nginx
+          EOF
+
+      - name: Test NGINX
+        run: ssh ubuntu@54.81.113.21 "curl -I http://54.81.113.21"
