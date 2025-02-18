@@ -3,7 +3,7 @@ name: Install Nginx on Servers in multiple
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   deploy:
