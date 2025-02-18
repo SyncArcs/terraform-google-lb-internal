@@ -1,32 +1,24 @@
-name: Deploy NGINX on Server
+name: Deploy NGINX on EC2 using AWS SSM
 
 on: [push, workflow_dispatch]
 
 jobs:
-  deploy:
+  deploy-nginx:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup SSH Key
+      - name: Install AWS CLI
+        run: sudo apt install -y awscli
+
+      - name: Install NGINX via AWS SSM
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H 54.81.113.21 >> ~/.ssh/known_hosts
-
-
-
-      - name: Install & Start NGINX on Server
-        run: |
-          ssh ubuntu@54.81.113.21 << 'EOF'
-            sudo apt update
-            sudo apt install -y nginx
-            sudo systemctl start nginx
-            sudo systemctl enable nginx
-          EOF
-
-      - name: Test NGINX
-        run: ssh ubuntu@54.81.113.21 "curl -I http://54.81.113.21"
+          aws ssm send-command \
+            --document-name "AWS-RunShellScript" \
+            --targets "Key=tag:Name,Values=MyServer" \
+            --parameters "commands=['sudo apt update', 'sudo apt install -y nginx', 'sudo systemctl start nginx', 'sudo systemctl enable nginx']" \
+            --region us-east-1 \
+            --query "Command.CommandId" \
+            --output text
