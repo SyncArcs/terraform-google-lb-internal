@@ -17,6 +17,7 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H 54.81.113.21 >> ~/.ssh/known_hosts
 
+
       - name: Install & Start NGINX on Server
         run: |
           ssh ubuntu@54.81.113.21 << 'EOF'
