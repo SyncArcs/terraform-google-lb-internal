@@ -25,4 +25,4 @@ jobs:
 
       - name: Verify Nginx is Running
         run: |
-          curl -I http://localhost | grep "200 OK"
+          curl -I http://127.0.0.1 | grep "200 OK"
