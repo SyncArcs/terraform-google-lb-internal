@@ -1,27 +1,29 @@
-name: Deploy NGINX on Server Using IP
+name: Install Nginx on Servers in multiple
 
-on: [push, workflow_dispatch]
+on:
+  push:
+    branches:
+      - master
 
 jobs:
-  deploy-nginx:
+  deploy:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        server_ip:
+          - 54.81.113.21
+          # Add more server IP addresses as needed
+
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      - name: Setup SSH Key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H 54.81.113.21 >> ~/.ssh/known_hosts
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Install NGINX on Server
+      - name: Install Nginx on Server
         run: |
-          ssh -i ~/.ssh/id_rsa ubuntu@54.81.113.21 << 'EOF'
-            sudo apt update
-            sudo apt install -y nginx
-            sudo systemctl start nginx
-            sudo systemctl enable nginx
-          EOF
+          ssh -i ~/.ssh/id_rsa  -o StrictHostKeyChecking=no ubuntu@${{ matrix.server_ip }} 'sudo apt-get update && sudo apt-get install -y nginx'
