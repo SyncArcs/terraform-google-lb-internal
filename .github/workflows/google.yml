@@ -26,4 +26,4 @@ jobs:
 
       - name: Install Nginx on Server
         run: |
-          ssh -i ~/.ssh/id_rsa  -o StrictHostKeyChecking=no ubuntu@${{ matrix.server_ip }} 'sudo apt-get update && sudo apt-get install -y mysql'
+          ssh -i ~/.ssh/id_rsa  -o StrictHostKeyChecking=no ubuntu@${{ matrix.server_ip }} 'sudo apt-get update && sudo apt-get install -y apache2'
